@@ -76,8 +76,8 @@ class DefaultDependency:
         """Transform dataclass to dict."""
         if exclude_none:
             return {k: v for k, v in self.__dict__.items() if v is not None}
-
-        return dict(self.__dict__.items())
+        # Return self.__dict__ directly rather than constructing a new dict, as __dict__ is already a mutable dict
+        return self.__dict__
 
 
 # Dependencies for simple BaseReader (e.g COGReader)
