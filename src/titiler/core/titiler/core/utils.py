@@ -162,7 +162,12 @@ def get_dependency_query_params(
 
     Important: We assume the `callable` in not a co-routine.
     """
-    dep = get_dependant(path="", call=dependency)
+    cache_attr = "_titiler_gdp_cached_dep"
+    if hasattr(dependency, cache_attr):
+        dep = getattr(dependency, cache_attr)
+    else:
+        dep = get_dependant(path="", call=dependency)
+        setattr(dependency, cache_attr, dep)
 
     qp = (
         QueryParams(urlencode(params, doseq=True))
@@ -190,6 +195,9 @@ def extract_query_params(
     params: Union[QueryParams, Dict],
 ) -> Tuple[ValidParams, Errors]:
     """Extract query params given list of dependencies."""
+    if isinstance(params, Dict):
+        params = QueryParams(urlencode(params, doseq=True))
+    
     values = {}
     errors = []
     for dep in dependencies:
