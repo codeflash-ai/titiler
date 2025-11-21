@@ -45,6 +45,16 @@ from titiler.mosaic.errors import MOSAIC_STATUS_CODES
 from titiler.mosaic.extensions import MosaicJSONExtension
 from titiler.mosaic.factory import MosaicTilerFactory
 
+_titiler_version = titiler_version
+
+_rasterio_version = rasterio.__version__
+
+_gdal_version = rasterio.__gdal_version__
+
+_proj_version = rasterio.__proj_version__
+
+_geos_version = rasterio.__geos_version__
+
 logging.getLogger("botocore.credentials").disabled = True
 logging.getLogger("botocore.utils").disabled = True
 logging.getLogger("rasterio.session").setLevel(logging.ERROR)
@@ -325,11 +335,11 @@ def application_health_check():
     """Health check."""
     return {
         "versions": {
-            "titiler": titiler_version,
-            "rasterio": rasterio.__version__,
-            "gdal": rasterio.__gdal_version__,
-            "proj": rasterio.__proj_version__,
-            "geos": rasterio.__geos_version__,
+            "titiler": _titiler_version,
+            "rasterio": _rasterio_version,
+            "gdal": _gdal_version,
+            "proj": _proj_version,
+            "geos": _geos_version,
         }
     }
 
