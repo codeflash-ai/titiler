@@ -65,10 +65,16 @@ class Algorithms:
         overwrite: bool = False,
     ) -> "Algorithms":
         """Register Algorithm(s)."""
-        for name, _algo in algorithms.items():
-            if name in self.data and not overwrite:
-                raise Exception(f"{name} is already a registered. Use overwrite=True.")
+        if not overwrite:
+            # Find overlap efficiently without repeated lookups in self.data
+            overlapping = self.data.keys() & algorithms.keys()
+            if overlapping:
+                raise Exception(
+                    f"{next(iter(overlapping))} is already a registered. Use overwrite=True."
+                )
 
+        # Fast dictionary merging (Python 3.9+) via | operator would be ideal,
+        # but for Python 3.11, dictionary unpacking is still efficient and safe.
         return Algorithms({**self.data, **algorithms})
 
     @property
