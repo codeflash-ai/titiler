@@ -162,13 +162,27 @@ def get_dependency_query_params(
 
     Important: We assume the `callable` in not a co-routine.
     """
-    dep = get_dependant(path="", call=dependency)
+    # Avoid recreating Dependant for each call if possible
+    dep = get_dependant.__globals__.get("_codeflash_dep_cache", {}).get(id(dependency))  # type: ignore
+    if dep is None:
+        dep = get_dependant(path="", call=dependency)
+        _cache = get_dependant.__globals__.setdefault("_codeflash_dep_cache", {})
+        _cache[id(dependency)] = dep
 
-    qp = (
-        QueryParams(urlencode(params, doseq=True))
-        if isinstance(params, Dict)
-        else params
-    )
+    # Fast path for QueryParams
+    if isinstance(params, QueryParams):
+        qp = params
+    else:
+        # Avoid unnecessary urlencode when params is empty or already a QueryParams
+        if not params:
+            qp = QueryParams("")
+        else:
+            # Faster than urlencode for small dicts: prebuild string when no lists in values are present
+            if all(not isinstance(v, (list, tuple)) for v in params.values()):
+                qp = QueryParams('&'.join(f"{k}={v}" for k, v in params.items()))
+            else:
+                qp = QueryParams(urlencode(params, doseq=True))
+
     return request_params_to_args(dep.query_params, qp)
 
 
