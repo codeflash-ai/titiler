@@ -57,7 +57,8 @@ class Algorithms:
 
     def list(self) -> List[str]:
         """List registered Algorithm."""
-        return list(self.data.keys())
+        # Directly unpack keys to a list for improved performance over using .keys() with list().
+        return [*self.data]
 
     def register(
         self,
