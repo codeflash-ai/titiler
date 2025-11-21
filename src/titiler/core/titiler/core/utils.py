@@ -313,9 +313,15 @@ def update_openapi(app: FastAPI) -> FastAPI:
     SOFTWARE.
     """
     # Find the route for the openapi_url in the app
-    openapi_route: Route = next(
-        route for route in app.router.routes if route.path == app.openapi_url
-    )
+    openapi_route: Route = None
+    for route in app.router.routes:
+        if route.path == app.openapi_url:
+            openapi_route = route
+            break
+    
+    if openapi_route is None:
+        raise StopIteration
+    
     # Store the old endpoint function so we can call it from the patched function
     old_endpoint = openapi_route.endpoint
 
