@@ -128,7 +128,7 @@ class _Var(BaseAlgorithm):
     def __call__(self, img: ImageData) -> ImageData:
         """Return Variance."""
         return ImageData(
-            numpy.ma.var(img.array, axis=0, keepdims=True, ddof=1),
+            img.array.var(axis=0, keepdims=True, ddof=1),
             assets=img.assets,
             crs=img.crs,
             bounds=img.bounds,
