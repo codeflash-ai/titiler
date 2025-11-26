@@ -164,11 +164,15 @@ def get_dependency_query_params(
     """
     dep = get_dependant(path="", call=dependency)
 
-    qp = (
-        QueryParams(urlencode(params, doseq=True))
-        if isinstance(params, Dict)
-        else params
-    )
+    if isinstance(params, Dict):
+        has_multi = any(isinstance(v, (list, tuple)) for v in params.values())
+        if has_multi:
+            qp = QueryParams(urlencode(params, doseq=True))
+        else:
+            qp = QueryParams(params)
+    else:
+        qp = params
+
     return request_params_to_args(dep.query_params, qp)
 
 
