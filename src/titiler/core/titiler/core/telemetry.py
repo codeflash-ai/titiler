@@ -7,13 +7,11 @@ from typing import Any, Callable, Dict, Iterator, Optional, TypeVar
 
 from typing_extensions import ParamSpec
 
-from titiler.core import __version__
-
 try:
     from opentelemetry import trace
     from opentelemetry.trace import Span, Status, StatusCode
 
-    tracer = trace.get_tracer("titiler.core", __version__)
+    tracer = None
 except ImportError:
     trace = None
     Span = None
@@ -27,10 +25,11 @@ R = TypeVar("R")
 
 def add_span_attributes(attributes: Dict[str, Any]) -> None:
     """Adds attributes to the current active span."""
-    if not tracer:
+    if tracer is None:
         return
     span = trace.get_current_span()
-    if span and span.is_recording():
+    # Avoid unnecessary is_recording() call if span is None
+    if span is not None and span.is_recording():
         span.set_attributes(attributes)
 
 
