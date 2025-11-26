@@ -147,9 +147,17 @@ class _Sum(BaseAlgorithm):
     output_nbands: int = 1
 
     def __call__(self, img: ImageData) -> ImageData:
-        """Return Min."""
+        """Return Sum."""
+        arr = img.array
+        if isinstance(arr, numpy.ma.MaskedArray) and not numpy.ma.is_masked(arr):
+            summed = arr.data.sum(axis=0, keepdims=True)
+        elif isinstance(arr, numpy.ndarray):
+            summed = arr.sum(axis=0, keepdims=True)
+        else:
+            summed = numpy.ma.sum(arr, axis=0, keepdims=True)
+
         return ImageData(
-            numpy.ma.sum(img.array, axis=0, keepdims=True),
+            summed,
             assets=img.assets,
             crs=img.crs,
             bounds=img.bounds,
