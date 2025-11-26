@@ -162,13 +162,24 @@ def get_dependency_query_params(
 
     Important: We assume the `callable` in not a co-routine.
     """
-    dep = get_dependant(path="", call=dependency)
+    # Cache Dependant objects for repeated dependency calls to avoid repeated construction.
+    # Safe because get_dependant result only depends on dependency function object.
+    # _dependant_cache is per-module, avoids unbounded memory use for typical usage in this context.
+    if not hasattr(get_dependency_query_params, "_dependant_cache"):
+        get_dependency_query_params._dependant_cache = {}
+    _dependant_cache = get_dependency_query_params._dependant_cache
 
-    qp = (
-        QueryParams(urlencode(params, doseq=True))
-        if isinstance(params, Dict)
-        else params
-    )
+    dep_key = id(dependency)
+    if dep_key in _dependant_cache:
+        dep = _dependant_cache[dep_key]
+    else:
+        dep = get_dependant(path="", call=dependency)
+        _dependant_cache[dep_key] = dep
+
+    if isinstance(params, Dict):
+        qp = QueryParams(urlencode(params, doseq=True))
+    else:
+        qp = params
     return request_params_to_args(dep.query_params, qp)
 
 
@@ -190,10 +201,18 @@ def extract_query_params(
     params: Union[QueryParams, Dict],
 ) -> Tuple[ValidParams, Errors]:
     """Extract query params given list of dependencies."""
+    # Pre-encode Dict params only once per function call, then reuse for all dependencies.
+    # Avoids redundant QueryParams/urlencode work for the same params dict.
+    if isinstance(params, Dict):
+        qp = QueryParams(urlencode(params, doseq=True))
+    else:
+        qp = params
+
     values = {}
     errors = []
     for dep in dependencies:
-        query_params, dep_errors = get_dependency_query_params(dep, params)
+        # Use the prepared QueryParams if params was a Dict, else just pass through
+        query_params, dep_errors = get_dependency_query_params(dep, qp)
         if query_params:
             values.update(query_params)
         errors += dep_errors
