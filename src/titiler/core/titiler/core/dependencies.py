@@ -74,10 +74,16 @@ class DefaultDependency:
 
     def as_dict(self, exclude_none: bool = True) -> Dict:
         """Transform dataclass to dict."""
+        d = self.__dict__
         if exclude_none:
-            return {k: v for k, v in self.__dict__.items() if v is not None}
-
-        return dict(self.__dict__.items())
+            # To improve speed, avoid Python generator comprehension overhead (`if v is not None`)
+            # by using an explicit loop for potentially larger dicts (profiler shows time skew).
+            out = {}
+            for k, v in d.items():
+                if v is not None:
+                    out[k] = v
+            return out
+        return dict(d)
 
 
 # Dependencies for simple BaseReader (e.g COGReader)
