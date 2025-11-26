@@ -50,10 +50,10 @@ class Algorithms:
 
     def get(self, name: str) -> BaseAlgorithm:
         """Fetch a TMS."""
-        if name not in self.data:
+        try:
+            return self.data[name]
+        except KeyError:
             raise KeyError(f"Invalid name: {name}")
-
-        return self.data[name]
 
     def list(self) -> List[str]:
         """List registered Algorithm."""
