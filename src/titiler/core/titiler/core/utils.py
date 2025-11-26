@@ -162,13 +162,22 @@ def get_dependency_query_params(
 
     Important: We assume the `callable` in not a co-routine.
     """
-    dep = get_dependant(path="", call=dependency)
+    # Cache get_dependant result to prevent unnecessary re-creation if function is called very frequently.
+    # But to avoid global mutable state, use attribute on function (no visible effect unless repeated).
+    if not hasattr(get_dependency_query_params, "_dependants"):
+        get_dependency_query_params._dependants = {}
+    _dependants = get_dependency_query_params._dependants
 
-    qp = (
-        QueryParams(urlencode(params, doseq=True))
-        if isinstance(params, Dict)
-        else params
-    )
+    dep = _dependants.get(dependency)
+    if dep is None:
+        dep = get_dependant(path="", call=dependency)
+        _dependants[dependency] = dep
+
+    # Optimize QueryParams instance construction for Dict: avoid unneeded urlencode for QueryParams input
+    if isinstance(params, Dict):
+        qp = QueryParams(urlencode(params, doseq=True))
+    else:
+        qp = params
     return request_params_to_args(dep.query_params, qp)
 
 
