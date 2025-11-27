@@ -57,7 +57,7 @@ class Algorithms:
 
     def list(self) -> List[str]:
         """List registered Algorithm."""
-        return list(self.data.keys())
+        return list(self.data)
 
     def register(
         self,
