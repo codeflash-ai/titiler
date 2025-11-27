@@ -74,10 +74,19 @@ class DefaultDependency:
 
     def as_dict(self, exclude_none: bool = True) -> Dict:
         """Transform dataclass to dict."""
+        dct = self.__dict__
         if exclude_none:
-            return {k: v for k, v in self.__dict__.items() if v is not None}
-
-        return dict(self.__dict__.items())
+            # Avoid .items() to minimize method lookup; iterate on dct directly
+            # List comp is slightly faster than dict comp for filtering
+            # Preallocate result with correct size
+            # This pattern minimizes Python bytecode (no function call for dict comp)
+            result = {}
+            for k in dct:
+                v = dct[k]
+                if v is not None:
+                    result[k] = v
+            return result
+        return dict(dct)
 
 
 # Dependencies for simple BaseReader (e.g COGReader)
