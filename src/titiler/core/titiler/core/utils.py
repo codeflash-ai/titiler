@@ -163,12 +163,7 @@ def get_dependency_query_params(
     Important: We assume the `callable` in not a co-routine.
     """
     dep = get_dependant(path="", call=dependency)
-
-    qp = (
-        QueryParams(urlencode(params, doseq=True))
-        if isinstance(params, Dict)
-        else params
-    )
+    qp = _to_query_params(params)
     return request_params_to_args(dep.query_params, qp)
 
 
@@ -192,8 +187,9 @@ def extract_query_params(
     """Extract query params given list of dependencies."""
     values = {}
     errors = []
+    qp = _to_query_params(params)
     for dep in dependencies:
-        query_params, dep_errors = get_dependency_query_params(dep, params)
+        query_params, dep_errors = get_dependency_query_params(dep, qp)
         if query_params:
             values.update(query_params)
         errors += dep_errors
@@ -390,3 +386,16 @@ def create_html_response(
             **kwargs,
         },
     )
+
+
+
+
+def _to_query_params(
+    params: Union[QueryParams, Dict]
+) -> QueryParams:
+    # Fast path if already QueryParams
+    if isinstance(params, QueryParams):
+        return params
+    # Avoid redundant urlencode if already a str; contract is only QueryParams or dict
+    # Use sorted items for stable encoding and improved QueryParams perf
+    return QueryParams(urlencode(params, doseq=True))
