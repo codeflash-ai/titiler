@@ -162,7 +162,15 @@ def get_dependency_query_params(
 
     Important: We assume the `callable` in not a co-routine.
     """
-    dep = get_dependant(path="", call=dependency)
+    cache = getattr(get_dependency_query_params, "_dependant_cache", None)
+    if cache is None:
+        cache = {}
+        setattr(get_dependency_query_params, "_dependant_cache", cache)
+
+    dep = cache.get(dependency)
+    if dep is None:
+        dep = get_dependant(path="", call=dependency)
+        cache[dependency] = dep
 
     qp = (
         QueryParams(urlencode(params, doseq=True))
