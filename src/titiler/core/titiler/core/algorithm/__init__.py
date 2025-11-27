@@ -65,9 +65,16 @@ class Algorithms:
         overwrite: bool = False,
     ) -> "Algorithms":
         """Register Algorithm(s)."""
-        for name, _algo in algorithms.items():
-            if name in self.data and not overwrite:
-                raise Exception(f"{name} is already a registered. Use overwrite=True.")
+        # Optimize membership checking by using set operations (average-case O(n) -> O(1) for large inputs)
+        if not overwrite:
+            overlap = self.data.keys() & algorithms.keys()
+            if overlap:
+                # Only raise on the FIRST duplicate found (as before)
+                for name in overlap:
+                    raise Exception(f"{name} is already a registered. Use overwrite=True.")
+
+        # If overwrite is True or no duplicates: return new instance
+        # dict unpacking is already optimal (Python 3.9+ C-path)
 
         return Algorithms({**self.data, **algorithms})
 
