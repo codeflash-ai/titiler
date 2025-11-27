@@ -148,8 +148,16 @@ class _Sum(BaseAlgorithm):
 
     def __call__(self, img: ImageData) -> ImageData:
         """Return Min."""
+        arr = img.array
+        # Optimization: Use numpy.add.reduce instead of numpy.ma.sum for a small speedup;
+        # But, to preserve thorough MaskedArray support, we directly call the .sum method of the array.
+        # Avoid unnecessary function call overhead of numpy.ma.sum, just use arr.sum.
+
+        # Use arr.sum(axis=0, keepdims=True) with appropriate support for MaskedArray.
+        summed = arr.sum(axis=0, keepdims=True)
+
         return ImageData(
-            numpy.ma.sum(img.array, axis=0, keepdims=True),
+            summed,
             assets=img.assets,
             crs=img.crs,
             bounds=img.bounds,
