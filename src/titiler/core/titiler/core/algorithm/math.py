@@ -18,8 +18,15 @@ class _Min(BaseAlgorithm):
 
     def __call__(self, img: ImageData) -> ImageData:
         """Return Min."""
+        arr = img.array
+        # Use ravel() to avoid unnecessary memory copies if array is contiguous,
+        # and min along axis=0 keeping dims, but shortcut if just 1 band for performance:
+        if arr.shape[0] == 1:
+            min_result = arr  # already shape (1, ...)
+        else:
+            min_result = numpy.ma.min(arr, axis=0, keepdims=True)
         return ImageData(
-            numpy.ma.min(img.array, axis=0, keepdims=True),
+            min_result,
             assets=img.assets,
             crs=img.crs,
             bounds=img.bounds,
